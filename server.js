@@ -25,7 +25,7 @@ app.use("/api/productos", products);
 app.use("/api/carrito", cart);
 
 //Products
-products.get("/", authMiddleware, async (req, res) => {
+products.get("/", async (req, res) => {
     const products = await productFiles.getAll();
     res.json(products).end();
 });
@@ -43,6 +43,7 @@ products.get("/:id", async (req, res) => {
 
 products.post(
     "/",
+    authMiddleware,
     postProductMiddleware,
     urlMiddleware,
     priceMiddleware,
@@ -60,7 +61,7 @@ products.post(
     }
 );
 
-products.put("/:id", putProductMiddleware, urlMiddleware, priceMiddleware, async (req, res) => {
+products.put("/:id", authMiddleware, putProductMiddleware, urlMiddleware, priceMiddleware, async (req, res) => {
     const { nombre, descripcion, codigo, foto, precio, stock } = req.body;
     const { id } = req.params;
     const product = { id: Number(id) };
@@ -86,7 +87,7 @@ products.put("/:id", putProductMiddleware, urlMiddleware, priceMiddleware, async
     res.end();
 });
 
-products.delete('/:id', async (req, res) => {
+products.delete('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
 
     const product = await productFiles.deleteById(Number(id));
