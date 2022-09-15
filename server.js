@@ -31,7 +31,7 @@ products.get("/", async (req, res) => {
 });
 
 products.get("/:id", async (req, res) => {
-    const product = await productFiles.getById(Number(req.params.id));
+    const product = await productFiles.getById(req.params.id);
 
     product
         ? res.json(product)
@@ -57,14 +57,14 @@ products.post(
             precio,
             stock,
         });
-        res.redirect("/");
+        res.redirect("/api/productos");
     }
 );
 
 products.put("/:id", authMiddleware, putProductMiddleware, urlMiddleware, priceMiddleware, async (req, res) => {
     const { nombre, descripcion, codigo, foto, precio, stock } = req.body;
     const { id } = req.params;
-    const product = { id: Number(id) };
+    const product = { id };
 
     if (nombre) product.nombre = nombre;
     if (precio) product.precio = Number(precio);
@@ -78,7 +78,7 @@ products.put("/:id", authMiddleware, putProductMiddleware, urlMiddleware, priceM
     productRes
         ? res.send({
             mensaje: 'Producto editado',
-            producto: productoRes
+            producto: productRes
         })
         : res.status(404).json({
             error: 'Producto no encontrado'
@@ -90,7 +90,7 @@ products.put("/:id", authMiddleware, putProductMiddleware, urlMiddleware, priceM
 products.delete('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
 
-    const product = await productFiles.deleteById(Number(id));
+    const product = await productFiles.deleteById(id);
 
     product
         ? res.json({
@@ -118,7 +118,7 @@ cart.post("/", async (req, res) => {
 cart.delete("/:id", async (req, res) => {
     const { id } = req.params;
 
-    const cart = await cartFiles.deleteById(Number(id));
+    const cart = await cartFiles.deleteById(id);
 
     cart
         ? res.json({
@@ -134,7 +134,7 @@ cart.delete("/:id", async (req, res) => {
 
 cart.get("/:id/productos", async (req, res) => {
     const { id } = req.params;
-    const cart = await cartFiles.getById(Number(id));
+    const cart = await cartFiles.getById(id);
 
     cart ?
         res.json({
@@ -150,8 +150,8 @@ cart.post("/:id/productos", async (req, res) => {
     const idCart = req.params.id;
     const idProduct = req.body.id;
 
-    const cart = await cartFiles.getById(Number(idCart));
-    const product = await productFiles.getById(Number(idProduct));
+    const cart = await cartFiles.getById(idCart);
+    const product = await productFiles.getById(idProduct);
 
     if (!cart) {
         res.status(404).json({ error: 'Carrito no encontrado' });
@@ -164,6 +164,7 @@ cart.post("/:id/productos", async (req, res) => {
     }
 
     cart.productos.push(product);
+    await cartFiles.updateById(cart);
 
     res.json({
         mensaje: 'Producto agregado al carrito',
@@ -175,25 +176,25 @@ cart.post("/:id/productos", async (req, res) => {
 cart.delete("/:id/productos/:id_prod", async (req, res) => {
     const { id, id_prod } = req.params;
 
-    const cart = await cartFiles.getById(Number(id));
+    const cart = await cartFiles.getById(id);
 
     if (!cart) {
         res.status(404).json({ error: 'Carrito no encontrado' });
         return;
     }
 
-    cart.products.filter(product => product.id !== id_prod);
+    cart.productos = cart.productos.filter(product =>
+        product.id !== id_prod
+    );
 
-    const cartRes = await cartFiles.updateById(cart);
+    await cartFiles.updateById(cart);
 
     res.json({
         mensaje: 'Producto eliminado del carrito',
-        productos: cartRes.productos
+        productos: cart.productos
     });
 
 });
-
-
 
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

@@ -1,5 +1,5 @@
 const fs = require('fs');
-
+const crypto = require('node:crypto');
 class Container {
     constructor(fileName) {
         this.fileName = fileName;
